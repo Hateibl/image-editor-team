@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Установка зависимостей
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake libopencv-dev libgtest-dev
+
+    - name: Сборка
+      run: |
+        mkdir -p build && cd build
+        cmake -DCMAKE_BUILD_TYPE=Release ..
+        make -j2
+
+    - name: Запуск тестов
+      run: |
+        cd build
+        ctest --output-on-failure
+
+    - name: Сборка Docker-образа
+      run: |
+        docker build -t image_editor -f docker/Dockerfile .
